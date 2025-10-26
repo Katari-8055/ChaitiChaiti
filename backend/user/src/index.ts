@@ -4,6 +4,7 @@ import connetDB from './config/DB.js';
 import { createClient } from 'redis';
 import userRoutes from './routes/user.js';
 import { connectToRabbitMQ } from './config/Rabitmq.js';
+import cors from 'cors';
 
 dotenv.config();
 
@@ -33,6 +34,8 @@ redisClient.connect().then(() => {
 
 const app = express();
 app.use(express.json());
+
+app.use(cors());
 
 app.use("/api/v1", userRoutes);
 

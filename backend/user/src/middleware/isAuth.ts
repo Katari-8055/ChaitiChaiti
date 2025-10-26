@@ -3,7 +3,7 @@ import jwt, { type JwtPayload } from "jsonwebtoken";
 
 
 interface IUser {
-  id: string;
+  _id: string;
   email: string;
 }
 

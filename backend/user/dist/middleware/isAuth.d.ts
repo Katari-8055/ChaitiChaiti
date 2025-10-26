@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 interface IUser {
-    id: string;
+    _id: string;
     email: string;
 }
 export interface AuthenticatedRequest extends Request {
