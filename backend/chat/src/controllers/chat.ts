@@ -6,6 +6,7 @@ import { Chat } from "../models/chat.js";
 export const crateNewChat  = TryCatch(async (req:AuthenticatedRequest, res) => {
     const userId = req.user?._id;
     const {otherUserId} = req.body;
+    
 
     if(!otherUserId){
         res.status(400).json({message: "otherUserId is required"});
@@ -22,6 +23,9 @@ export const crateNewChat  = TryCatch(async (req:AuthenticatedRequest, res) => {
     const newChat = await Chat.create({
         users: [userId, otherUserId],
     })
+
+
+    await newChat.save();
 
     res.status(201).json({message: "New Chat Created", chatId: newChat._id});
 })

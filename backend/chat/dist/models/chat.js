@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
 const schema = new Schema({
-    user: [{ type: String, required: true }],
+    users: [{ type: String, required: true }],
     latestMessage: {
         text: String,
         sender: String
