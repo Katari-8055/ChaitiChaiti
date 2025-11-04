@@ -1,7 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 
-
 interface IUser {
   _id: string;
   email: string;
@@ -12,7 +11,8 @@ export interface AuthenticatedRequest extends Request {
 }
 
 interface CustomJwtPayload extends JwtPayload {
-  user: IUser;
+  id: string;
+  email: string;
 }
 
 export const isAuth = async (
@@ -21,35 +21,44 @@ export const isAuth = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const authHeader = req.headers.authorization;
+    let token: string | undefined;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      res.status(401).json({ message: "Please login - no auth header" });
+    // ✅ 1) Try cookie first
+    if (req.cookies?.token) {
+      token = req.cookies.token;
+    }
+
+    // ✅ 2) Fallback → Bearer header
+    if (!token && req.headers.authorization?.startsWith("Bearer ")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+
+    if (!token) {
+      res.status(401).json({ message: "Please login - token missing" });
       return;
     }
 
-    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET as string
+    ) as CustomJwtPayload;
 
-    
-
-    const decoded = jwt.verify(token as string, process.env.JWT_SECRET as string);
-
-    // ✅ Type guard: jwt.verify() can return string | JwtPayload
-    if (typeof decoded === "string" || !decoded) {
+    if (!decoded) {
       res.status(401).json({ message: "Invalid token payload" });
       return;
     }
 
-    const decodedValue = decoded as CustomJwtPayload;
+    // ✅ Attach user to req
+    req.user = {
+      _id: decoded.id,
+      email: decoded.email,
+    };
 
-    if (!decodedValue.user) {
-      res.status(401).json({ message: "Invalid token data" });
-      return;
-    }
-
-    req.user = decodedValue.user;
     next();
   } catch (error) {
-    res.status(401).json({ message: "JWT Error", error: (error as Error).message });
+    res.status(401).json({
+      message: "JWT error",
+      error: (error as Error).message,
+    });
   }
 };

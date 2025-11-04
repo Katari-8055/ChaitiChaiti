@@ -9,7 +9,7 @@ export const loginUser = TryCatch(async (req, res) => {
     const ratelimit = await redisClient.get(rateLimitKey);
     if (ratelimit) {
         res.status(429).json({
-            message: "Too many request, please try again later"
+            message: "Too many request, please try again later",
         });
         return;
     }
@@ -24,18 +24,18 @@ export const loginUser = TryCatch(async (req, res) => {
     const message = {
         to: email,
         subject: "Your Otp Code",
-        body: `Your OTP is ${otp}. It is valid for 5 Minutes.`
+        body: `Your OTP is ${otp}. It is valid for 5 Minutes.`,
     };
     await publishToQueue("send-otp", message);
     res.status(200).json({
-        message: "OTP sent successfully"
+        message: "OTP sent successfully",
     });
 });
 export const verifyUser = TryCatch(async (req, res) => {
     const { email, otp } = req.body;
     if (!email || !otp) {
         res.status(400).json({
-            message: "All fields are required"
+            message: "All fields are required",
         });
         return;
     }
@@ -43,7 +43,7 @@ export const verifyUser = TryCatch(async (req, res) => {
     const savedOtp = await redisClient.get(otpKey);
     if (savedOtp !== otp) {
         res.status(400).json({
-            message: "Invalid OTP"
+            message: "Invalid OTP",
         });
         return;
     }
@@ -54,10 +54,17 @@ export const verifyUser = TryCatch(async (req, res) => {
         user = await User.create({ email, name });
     }
     const token = generateToken(user);
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production", // ✅ true on production
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // ✅ 7 days
+    });
+    console.log("User verified:", user.email);
     res.json({
         message: "User Verified Successfully",
         user,
-        token
+        token,
     });
 });
 export const myProfile = TryCatch(async (req, res) => {
@@ -68,7 +75,7 @@ export const updateName = TryCatch(async (req, res) => {
     const user = await User.findById(req.user?._id);
     if (!user) {
         res.status(404).json({
-            message: "User not found"
+            message: "User not found",
         });
         return;
     }
@@ -78,7 +85,7 @@ export const updateName = TryCatch(async (req, res) => {
     res.json({
         message: "User name updated successfully",
         user,
-        token
+        token,
     });
 });
 export const getAllUsers = TryCatch(async (req, res) => {

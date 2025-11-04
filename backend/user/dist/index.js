@@ -5,6 +5,7 @@ import { createClient } from 'redis';
 import userRoutes from './routes/user.js';
 import { connectToRabbitMQ } from './config/Rabitmq.js';
 import cors from 'cors';
+import { credentials } from 'amqplib';
 dotenv.config();
 connetDB();
 connectToRabbitMQ();
@@ -23,7 +24,10 @@ redisClient.connect().then(() => {
 });
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+}));
 app.use("/api/v1", userRoutes);
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
